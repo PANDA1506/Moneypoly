@@ -25,7 +25,9 @@ ARCJET_KEY=
 # 📝 Description
 Moneypoly is a smart expense categorization tool built with Next.js and React. It provides a user-friendly web interface and a powerful API to automatically classify your expenses, helping you gain valuable insights into your spending habits. Simplify your financial tracking and budgeting with Moneypoly!
 
-# 📁 Project Structure
+## 📁 Project Structure
+
+```
 .
 ├── actions
 │   ├── account.js
@@ -143,10 +145,12 @@ Moneypoly is a smart expense categorization tool built with Next.js and React. I
 │   ├── logo-sm.png
 │   └── logo.png
 └── tailwind.config.js
+```
 
-# 🛠️ Development Setup
-Node.js/JavaScript Setup
-Install Node.js 
-Install dependencies: npm install or yarn install
-Start development server: npm run dev
+## 🛠️ Development Setup
+
+### Node.js/JavaScript Setup
+1. Install Node.js 
+2. Install dependencies: `npm install` or `yarn install`
+3. Start development server: `npm run dev`
 
