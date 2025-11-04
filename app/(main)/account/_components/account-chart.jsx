@@ -39,12 +39,10 @@ export function AccountChart({ transactions }) {
       ? startOfDay(subDays(now, range.days))
       : startOfDay(new Date(0));
 
-    // Filter transactions within date range
     const filtered = transactions.filter(
       (t) => new Date(t.date) >= startDate && new Date(t.date) <= endOfDay(now)
     );
 
-    // Group transactions by date
     const grouped = filtered.reduce((acc, transaction) => {
       const date = format(new Date(transaction.date), "MMM dd");
       if (!acc[date]) {
@@ -58,13 +56,11 @@ export function AccountChart({ transactions }) {
       return acc;
     }, {});
 
-    // Convert to array and sort by date
     return Object.values(grouped).sort(
       (a, b) => new Date(a.date) - new Date(b.date)
     );
   }, [transactions, dateRange]);
 
-  // Calculate totals for the selected period
   const totals = useMemo(() => {
     return filteredData.reduce(
       (acc, day) => ({
@@ -76,18 +72,22 @@ export function AccountChart({ transactions }) {
   }, [filteredData]);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-7">
-        <CardTitle className="text-base font-normal">
-          Transaction Overview
+    <Card className="bg-gradient-to-br from-gray-900 via-black to-gray-800 border border-gray-700 shadow-lg hover:shadow-indigo-500/30 transition-all duration-500 rounded-2xl">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+        <CardTitle className="text-xl font-extrabold text-white tracking-tight">
+          Transaction <span className="text-indigo-400">Overview</span>
         </CardTitle>
         <Select defaultValue={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[150px] bg-gray-800 text-white border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all">
             <SelectValue placeholder="Select range" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-900 text-white border border-gray-700 rounded-lg">
             {Object.entries(DATE_RANGES).map(([key, { label }]) => (
-              <SelectItem key={key} value={key}>
+              <SelectItem
+                key={key}
+                value={key}
+                className="hover:bg-indigo-600 cursor-pointer rounded-md"
+              >
                 {label}
               </SelectItem>
             ))}
@@ -95,71 +95,77 @@ export function AccountChart({ transactions }) {
         </Select>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-around mb-6 text-sm">
+        {/* Totals Section */}
+        <div className="flex flex-wrap justify-around mb-6 text-sm gap-6">
           <div className="text-center">
-            <p className="text-muted-foreground">Total Income</p>
-            <p className="text-lg font-bold text-green-500">
-              ${totals.income.toFixed(2)}
+            <p className="text-gray-400">Total Income</p>
+            <p className="text-xl font-bold text-green-400">
+              Rs.{totals.income.toFixed(2)}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-muted-foreground">Total Expenses</p>
-            <p className="text-lg font-bold text-red-500">
-              ${totals.expense.toFixed(2)}
+            <p className="text-gray-400">Total Expenses</p>
+            <p className="text-xl font-bold text-red-400">
+              Rs.{totals.expense.toFixed(2)}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-muted-foreground">Net</p>
+            <p className="text-gray-400">Net</p>
             <p
-              className={`text-lg font-bold ${
+              className={`text-xl font-bold ${
                 totals.income - totals.expense >= 0
-                  ? "text-green-500"
-                  : "text-red-500"
+                  ? "text-green-400"
+                  : "text-red-400"
               }`}
             >
-              ${(totals.income - totals.expense).toFixed(2)}
+              Rs.{(totals.income - totals.expense).toFixed(2)}
             </p>
           </div>
         </div>
-        <div className="h-[300px]">
+
+        {/* Chart Section */}
+        <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={filteredData}
-              margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+              margin={{ top: 20, right: 20, left: 0, bottom: 10 }}
             >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#444" />
               <XAxis
                 dataKey="date"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
+                stroke="#aaa"
               />
               <YAxis
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `$${value}`}
+                stroke="#aaa"
+                tickFormatter={(value) => `Rs.${value}`}
               />
               <Tooltip
-                formatter={(value) => [`$${value}`, undefined]}
+                formatter={(value) => [`Rs.${value}`, undefined]}
                 contentStyle={{
-                  backgroundColor: "hsl(var(--popover))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "var(--radius)",
+                  backgroundColor: "#1f2937",
+                  border: "1px solid #374151",
+                  borderRadius: "0.5rem",
+                  color: "#fff",
                 }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ color: "#fff" }} />
               <Bar
                 dataKey="income"
                 name="Income"
                 fill="#22c55e"
-                radius={[4, 4, 0, 0]}
+                radius={[6, 6, 0, 0]}
               />
               <Bar
                 dataKey="expense"
                 name="Expense"
                 fill="#ef4444"
-                radius={[4, 4, 0, 0]}
+                radius={[6, 6, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>

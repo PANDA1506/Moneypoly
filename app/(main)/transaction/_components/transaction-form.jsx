@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from "react";
@@ -95,18 +96,35 @@ export function AddTransactionForm({
   };
 
   const handleScanComplete = (scannedData) => {
-    if (scannedData) {
+  if (scannedData) {
+    if (scannedData.amount) {
       setValue("amount", scannedData.amount.toString());
-      setValue("date", new Date(scannedData.date));
-      if (scannedData.description) {
-        setValue("description", scannedData.description);
-      }
-      if (scannedData.category) {
-        setValue("category", scannedData.category);
-      }
-      toast.success("Receipt scanned successfully");
     }
-  };
+    if (scannedData.date) {
+      setValue("date", new Date(scannedData.date));
+    }
+    if (scannedData.description) {
+      setValue("description", scannedData.description);
+    }
+    if (scannedData.category) {
+      // Match scanned category (name) with your categories list
+      const matchedCategory = categories.find(
+        (c) =>
+          c.name.toLowerCase().trim() ===
+          scannedData.category.toLowerCase().trim()
+      );
+
+      if (matchedCategory) {
+        setValue("category", matchedCategory.id); // ✅ Use ID instead of name
+      } else {
+        toast.error(`Category "${scannedData.category}" not found`);
+      }
+    }
+    toast.success("Receipt scanned successfully");
+  }
+};
+
+
 
   useEffect(() => {
     if (transactionResult?.success && !transactionLoading) {
@@ -129,87 +147,95 @@ export function AddTransactionForm({
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Receipt Scanner - Only show in create mode */}
-      {!editMode && <ReceiptScanner onScanComplete={handleScanComplete} />}
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-6 p-6 rounded-2xl bg-gray-900 border border-gray-800 shadow-xl text-white"
+    >
+      {/* Receipt Scanner */}
+      {!editMode && (
+        <div className="rounded-xl border border-gray-800 p-4 bg-gray-800/60">
+          <ReceiptScanner onScanComplete={handleScanComplete} />
+        </div>
+      )}
 
       {/* Type */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Type</label>
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-gray-400">Type</label>
         <Select
           onValueChange={(value) => setValue("type", value)}
           defaultValue={type}
         >
-          <SelectTrigger>
+          <SelectTrigger className="rounded-xl bg-gray-800/70 border-gray-700 focus:ring-2 focus:ring-indigo-500 transition">
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-900 text-white border border-gray-700 rounded-xl shadow-lg">
             <SelectItem value="EXPENSE">Expense</SelectItem>
             <SelectItem value="INCOME">Income</SelectItem>
           </SelectContent>
         </Select>
         {errors.type && (
-          <p className="text-sm text-red-500">{errors.type.message}</p>
+          <p className="text-xs text-red-500">{errors.type.message}</p>
         )}
       </div>
 
-      {/* Amount and Account */}
+      {/* Amount + Account */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Amount</label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-400">Amount</label>
           <Input
             type="number"
             step="0.01"
             placeholder="0.00"
+            className="rounded-xl bg-gray-800/70 border-gray-700 focus:ring-2 focus:ring-indigo-500 transition"
             {...register("amount")}
           />
           {errors.amount && (
-            <p className="text-sm text-red-500">{errors.amount.message}</p>
+            <p className="text-xs text-red-500">{errors.amount.message}</p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Account</label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-400">Account</label>
           <Select
             onValueChange={(value) => setValue("accountId", value)}
             defaultValue={getValues("accountId")}
           >
-            <SelectTrigger>
+            <SelectTrigger className="rounded-xl bg-gray-800/70 border-gray-700 focus:ring-2 focus:ring-indigo-500 transition">
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-gray-900 text-white border border-gray-700 rounded-xl shadow-lg">
               {accounts.map((account) => (
                 <SelectItem key={account.id} value={account.id}>
-                  {account.name} (${parseFloat(account.balance).toFixed(2)})
+                  {account.name} (Rs.{parseFloat(account.balance).toFixed(2)})
                 </SelectItem>
               ))}
               <CreateAccountDrawer>
                 <Button
                   variant="ghost"
-                  className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                  className="w-full text-indigo-400 hover:bg-gray-800 hover:text-white rounded-lg"
                 >
-                  Create Account
+                  ➕ Create Account
                 </Button>
               </CreateAccountDrawer>
             </SelectContent>
           </Select>
           {errors.accountId && (
-            <p className="text-sm text-red-500">{errors.accountId.message}</p>
+            <p className="text-xs text-red-500">{errors.accountId.message}</p>
           )}
         </div>
       </div>
 
       {/* Category */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Category</label>
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-gray-400">Category</label>
         <Select
           onValueChange={(value) => setValue("category", value)}
           defaultValue={getValues("category")}
         >
-          <SelectTrigger>
+          <SelectTrigger className="rounded-xl bg-gray-800/70 border-gray-700 focus:ring-2 focus:ring-indigo-500 transition">
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-900 text-white border border-gray-700 rounded-xl shadow-lg">
             {filteredCategories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name}
@@ -218,59 +244,72 @@ export function AddTransactionForm({
           </SelectContent>
         </Select>
         {errors.category && (
-          <p className="text-sm text-red-500">{errors.category.message}</p>
+          <p className="text-xs text-red-500">{errors.category.message}</p>
         )}
       </div>
 
       {/* Date */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Date</label>
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-gray-400">Date</label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               className={cn(
-                "w-full pl-3 text-left font-normal",
-                !date && "text-muted-foreground"
+                "w-full pl-3 text-left font-normal rounded-xl bg-gray-800/70 border-gray-700 hover:bg-gray-700 transition",
+                !date && "text-gray-400"
               )}
             >
               {date ? format(date, "PPP") : <span>Pick a date</span>}
-              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              <CalendarIcon className="ml-auto h-4 w-4 opacity-70" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 bg-gray-900 border border-gray-700 rounded-xl shadow-xl">
             <Calendar
               mode="single"
               selected={date}
               onSelect={(date) => setValue("date", date)}
               disabled={(date) =>
-                date > new Date() || date < new Date("1900-01-01")
-              }
-              initialFocus
-            />
-          </PopoverContent>
+              date > new Date() || date < new Date("1900-01-01")
+            }
+            initialFocus
+            className="
+              rounded-xl bg-gray-900 text-white
+             [&_.rdp-day]:text-gray-200                 /* Normal days */
+             [&_.rdp-day:hover]:bg-gray-700             /* Hover state */
+             [&_.rdp-day_selected]:bg-indigo-500 
+             [&_.rdp-day_selected]:text-white           /* Selected date */
+             [&_.rdp-day_disabled]:text-gray-600        /* Disabled dates */
+            [&_.rdp-day_today]:ring-1 [&_.rdp-day_today]:ring-indigo-400 [&_.rdp-day_today]:rounded-full
+          "
+          />
+        </PopoverContent>
         </Popover>
         {errors.date && (
-          <p className="text-sm text-red-500">{errors.date.message}</p>
+          <p className="text-xs text-red-500">{errors.date.message}</p>
         )}
       </div>
 
       {/* Description */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Description</label>
-        <Input placeholder="Enter description" {...register("description")} />
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-gray-400">Description</label>
+        <Input
+          placeholder="Enter description"
+          className="rounded-xl bg-gray-800/70 border-gray-700 focus:ring-2 focus:ring-indigo-500 transition"
+          {...register("description")}
+        />
         {errors.description && (
-          <p className="text-sm text-red-500">{errors.description.message}</p>
+          <p className="text-xs text-red-500">{errors.description.message}</p>
         )}
       </div>
 
       {/* Recurring Toggle */}
-      <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-        <div className="space-y-0.5">
-          <label className="text-base font-medium">Recurring Transaction</label>
-          <div className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between rounded-xl border border-gray-800 p-4 bg-gray-800/60">
+        <div>
+          <label className="text-sm font-semibold">Recurring Transaction</label>
+          <p className="text-xs text-gray-400">
             Set up a recurring schedule for this transaction
-          </div>
+          </p>
         </div>
         <Switch
           checked={isRecurring}
@@ -280,16 +319,18 @@ export function AddTransactionForm({
 
       {/* Recurring Interval */}
       {isRecurring && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Recurring Interval</label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-400">
+            Recurring Interval
+          </label>
           <Select
             onValueChange={(value) => setValue("recurringInterval", value)}
             defaultValue={getValues("recurringInterval")}
           >
-            <SelectTrigger>
+            <SelectTrigger className="rounded-xl bg-gray-800/70 border-gray-700 focus:ring-2 focus:ring-indigo-500 transition">
               <SelectValue placeholder="Select interval" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-gray-900 text-white border border-gray-700 rounded-xl shadow-lg">
               <SelectItem value="DAILY">Daily</SelectItem>
               <SelectItem value="WEEKLY">Weekly</SelectItem>
               <SelectItem value="MONTHLY">Monthly</SelectItem>
@@ -297,7 +338,7 @@ export function AddTransactionForm({
             </SelectContent>
           </Select>
           {errors.recurringInterval && (
-            <p className="text-sm text-red-500">
+            <p className="text-xs text-red-500">
               {errors.recurringInterval.message}
             </p>
           )}
@@ -309,12 +350,16 @@ export function AddTransactionForm({
         <Button
           type="button"
           variant="outline"
-          className="w-full"
+          className="w-full rounded-xl border-gray-700 hover:bg-gray-800 text-black transition"
           onClick={() => router.back()}
         >
           Cancel
         </Button>
-        <Button type="submit" className="w-full" disabled={transactionLoading}>
+        <Button
+          type="submit"
+          className="w-full rounded-xl bg-indigo-500 hover:bg-indigo-600 shadow-lg transition-all"
+          disabled={transactionLoading}
+        >
           {transactionLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -330,3 +375,6 @@ export function AddTransactionForm({
     </form>
   );
 }
+
+
+

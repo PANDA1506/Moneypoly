@@ -71,35 +71,29 @@ export function NoPaginationTransactionTable({ transactions }) {
   const [recurringFilter, setRecurringFilter] = useState("");
   const router = useRouter();
 
-  // Memoized filtered and sorted transactions
+  // Filter + Sort
   const filteredAndSortedTransactions = useMemo(() => {
     let result = [...transactions];
 
-    // Apply search filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      result = result.filter((transaction) =>
-        transaction.description?.toLowerCase().includes(searchLower)
+      result = result.filter((t) =>
+        t.description?.toLowerCase().includes(searchLower)
       );
     }
 
-    // Apply type filter
     if (typeFilter) {
-      result = result.filter((transaction) => transaction.type === typeFilter);
+      result = result.filter((t) => t.type === typeFilter);
     }
 
-    // Apply recurring filter
     if (recurringFilter) {
-      result = result.filter((transaction) => {
-        if (recurringFilter === "recurring") return transaction.isRecurring;
-        return !transaction.isRecurring;
-      });
+      result = result.filter((t) =>
+        recurringFilter === "recurring" ? t.isRecurring : !t.isRecurring
+      );
     }
 
-    // Apply sorting
     result.sort((a, b) => {
       let comparison = 0;
-
       switch (sortConfig.field) {
         case "date":
           comparison = new Date(a.date) - new Date(b.date);
@@ -110,10 +104,7 @@ export function NoPaginationTransactionTable({ transactions }) {
         case "category":
           comparison = a.category.localeCompare(b.category);
           break;
-        default:
-          comparison = 0;
       }
-
       return sortConfig.direction === "asc" ? comparison : -comparison;
     });
 
@@ -144,11 +135,9 @@ export function NoPaginationTransactionTable({ transactions }) {
     );
   };
 
-  const {
-    loading: deleteLoading,
-    fn: deleteFn,
-    data: deleted,
-  } = useFetch(bulkDeleteTransactions);
+  const { loading: deleteLoading, fn: deleteFn, data: deleted } = useFetch(
+    bulkDeleteTransactions
+  );
 
   const handleBulkDelete = async () => {
     if (
@@ -157,7 +146,6 @@ export function NoPaginationTransactionTable({ transactions }) {
       )
     )
       return;
-
     deleteFn(selectedIds);
   };
 
@@ -179,55 +167,49 @@ export function NoPaginationTransactionTable({ transactions }) {
       {deleteLoading && (
         <BarLoader className="mt-4" width={"100%"} color="#9333ea" />
       )}
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Search transactions..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
+            className="pl-8 bg-gray-900 border-gray-700 text-gray-100 placeholder:text-gray-400"
           />
         </div>
         <div className="flex gap-2">
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="bg-gray-900 border-gray-700 text-gray-100">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-gray-900 border-gray-700">
               <SelectItem value="INCOME">Income</SelectItem>
               <SelectItem value="EXPENSE">Expense</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select
-            value={recurringFilter}
-            onValueChange={(value) => {
-              setRecurringFilter(value);
-            }}
-          >
-            <SelectTrigger className="w-[130px]">
+          <Select value={recurringFilter} onValueChange={setRecurringFilter}>
+            <SelectTrigger className="bg-gray-900 border-gray-700 text-gray-100 w-[150px]">
               <SelectValue placeholder="All Transactions" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-gray-900 border-gray-700">
               <SelectItem value="recurring">Recurring Only</SelectItem>
               <SelectItem value="non-recurring">Non-recurring Only</SelectItem>
             </SelectContent>
           </Select>
 
-          {/* Bulk Actions */}
           {selectedIds.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDelete}
-              >
-                <Trash className="h-4 w-4 mr-2" />
-                Delete Selected ({selectedIds.length})
-              </Button>
-            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              <Trash className="h-4 w-4 mr-2" />
+              Delete ({selectedIds.length})
+            </Button>
           )}
 
           {(searchTerm || typeFilter || recurringFilter) && (
@@ -235,7 +217,7 @@ export function NoPaginationTransactionTable({ transactions }) {
               variant="outline"
               size="icon"
               onClick={handleClearFilters}
-              title="Clear filters"
+              className="border-gray-700 text-gray-300 hover:bg-gray-800"
             >
               <X className="h-4 w-5" />
             </Button>
@@ -243,12 +225,12 @@ export function NoPaginationTransactionTable({ transactions }) {
         </div>
       </div>
 
-      {/* Transactions Table */}
-      <div className="rounded-md border">
+      {/* Table */}
+      <div className="rounded-lg border border-gray-700 shadow-lg bg-gradient-to-br from-gray-900 via-black to-gray-800">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]">
+            <TableRow className="border-gray-700">
+              <TableHead className="w-[50px] text-gray-300">
                 <Checkbox
                   checked={
                     selectedIds.length ===
@@ -259,7 +241,7 @@ export function NoPaginationTransactionTable({ transactions }) {
                 />
               </TableHead>
               <TableHead
-                className="cursor-pointer"
+                className="cursor-pointer text-gray-300"
                 onClick={() => handleSort("date")}
               >
                 <div className="flex items-center">
@@ -272,9 +254,9 @@ export function NoPaginationTransactionTable({ transactions }) {
                     ))}
                 </div>
               </TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead className="text-gray-300">Description</TableHead>
               <TableHead
-                className="cursor-pointer"
+                className="cursor-pointer text-gray-300"
                 onClick={() => handleSort("category")}
               >
                 <div className="flex items-center">
@@ -288,7 +270,7 @@ export function NoPaginationTransactionTable({ transactions }) {
                 </div>
               </TableHead>
               <TableHead
-                className="cursor-pointer text-right"
+                className="cursor-pointer text-right text-gray-300"
                 onClick={() => handleSort("amount")}
               >
                 <div className="flex items-center justify-end">
@@ -301,7 +283,7 @@ export function NoPaginationTransactionTable({ transactions }) {
                     ))}
                 </div>
               </TableHead>
-              <TableHead>Recurring</TableHead>
+              <TableHead className="text-gray-300">Recurring</TableHead>
               <TableHead className="w-[50px]" />
             </TableRow>
           </TableHeader>
@@ -310,24 +292,29 @@ export function NoPaginationTransactionTable({ transactions }) {
               <TableRow>
                 <TableCell
                   colSpan={7}
-                  className="text-center text-muted-foreground"
+                  className="text-center text-gray-500"
                 >
                   No transactions found
                 </TableCell>
               </TableRow>
             ) : (
               filteredAndSortedTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
+                <TableRow
+                  key={transaction.id}
+                  className="border-gray-800 hover:bg-gray-800/40 transition-colors"
+                >
                   <TableCell>
                     <Checkbox
                       checked={selectedIds.includes(transaction.id)}
                       onCheckedChange={() => handleSelect(transaction.id)}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-gray-200">
                     {format(new Date(transaction.date), "PP")}
                   </TableCell>
-                  <TableCell>{transaction.description}</TableCell>
+                  <TableCell className="text-gray-300">
+                    {transaction.description}
+                  </TableCell>
                   <TableCell className="capitalize">
                     <span
                       style={{
@@ -342,11 +329,11 @@ export function NoPaginationTransactionTable({ transactions }) {
                     className={cn(
                       "text-right font-medium",
                       transaction.type === "EXPENSE"
-                        ? "text-red-500"
-                        : "text-green-500"
+                        ? "text-red-400"
+                        : "text-green-400"
                     )}
                   >
-                    {transaction.type === "EXPENSE" ? "-" : "+"}$
+                    {transaction.type === "EXPENSE" ? "-" : "+"}${" "}
                     {transaction.amount.toFixed(2)}
                   </TableCell>
                   <TableCell>
@@ -356,7 +343,7 @@ export function NoPaginationTransactionTable({ transactions }) {
                           <TooltipTrigger>
                             <Badge
                               variant="secondary"
-                              className="gap-1 bg-purple-100 text-purple-700 hover:bg-purple-200"
+                              className="gap-1 bg-purple-900/50 text-purple-300 hover:bg-purple-800"
                             >
                               <RefreshCw className="h-3 w-3" />
                               {
@@ -366,7 +353,7 @@ export function NoPaginationTransactionTable({ transactions }) {
                               }
                             </Badge>
                           </TooltipTrigger>
-                          <TooltipContent>
+                          <TooltipContent className="bg-gray-900 border border-gray-700 text-gray-200">
                             <div className="text-sm">
                               <div className="font-medium">Next Date:</div>
                               <div>
@@ -380,7 +367,10 @@ export function NoPaginationTransactionTable({ transactions }) {
                         </Tooltip>
                       </TooltipProvider>
                     ) : (
-                      <Badge variant="outline" className="gap-1">
+                      <Badge
+                        variant="outline"
+                        className="gap-1 border-gray-600 text-gray-300"
+                      >
                         <Clock className="h-3 w-3" />
                         One-time
                       </Badge>
@@ -389,11 +379,17 @@ export function NoPaginationTransactionTable({ transactions }) {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-gray-300 hover:bg-gray-800"
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-gray-900 border border-gray-700 text-gray-200"
+                      >
                         <DropdownMenuItem
                           onClick={() =>
                             router.push(
@@ -403,9 +399,9 @@ export function NoPaginationTransactionTable({ transactions }) {
                         >
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                        <DropdownMenuSeparator className="bg-gray-700" />
                         <DropdownMenuItem
-                          className="text-destructive"
+                          className="text-red-500 hover:bg-red-500/10"
                           onClick={() => deleteFn([transaction.id])}
                         >
                           Delete
@@ -422,3 +418,6 @@ export function NoPaginationTransactionTable({ transactions }) {
     </div>
   );
 }
+
+
+

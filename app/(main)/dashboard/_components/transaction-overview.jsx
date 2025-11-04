@@ -8,6 +8,11 @@ import {
   ResponsiveContainer,
   Tooltip,
   Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from "recharts";
 import { format } from "date-fns";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
@@ -76,121 +81,196 @@ export function DashboardOverview({ accounts, transactions }) {
     })
   );
 
+  // --- New: Accounts comparison chart ---
+  // --- Accounts comparison data (Spent vs Balance) ---
+  const accountsComparisonData = accounts.map((account) => {
+    // total spent for this account
+    const spent = transactions
+      .filter((t) => t.accountId === account.id && t.type === "EXPENSE")
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    return {
+      name: account.name,
+      spent,
+      balance: parseFloat(account.balance) || 0, // use account.balance directly
+    };
+  });
+
+
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {/* Recent Transactions Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="text-base font-normal">
-            Recent Transactions
+    <div className="grid gap-6">
+      {/* Accounts Comparison Card */}
+      <Card className="shadow-md rounded-2xl border">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">
+            Accounts Comparison (Spent vs Balance)
           </CardTitle>
-          <Select
-            value={selectedAccountId}
-            onValueChange={setSelectedAccountId}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Select account" />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.map((account) => (
-                <SelectItem key={account.id} value={account.id}>
-                  {account.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <CardContent className="p-4">
+          {accountsComparisonData.length === 0 ? (
+            <p className="text-center text-muted-foreground py-6">
+              No account data available
+            </p>
+          ) : (
+            <div className="h-[320px] w-full">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={accountsComparisonData}
+                  margin={{ top: 20, right: 40, left: 60, bottom: 20 }} // <-- increase left margin
+                >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip
+                  formatter={(value) => `₹${value.toFixed(2)}`}
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                  }}
+                />
+              <Legend />
+              <Bar dataKey="spent" stackId="a" fill="#FF6B6B" name="Spent" />
+              <Bar dataKey="balance" stackId="a" fill="#4ECDC4" name="Balance Left" />
+            </BarChart>
+          </ResponsiveContainer>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Old Code: Recent Transactions + Expense Breakdown */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Recent Transactions Card */}
+        <Card className="shadow-md rounded-2xl border">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <CardTitle className="text-lg font-semibold">
+              Recent Transactions
+            </CardTitle>
+            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+              <SelectTrigger className="w-[150px] text-sm">
+                <SelectValue placeholder="Select account" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id}>
+                    {account.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardHeader>
+
+          <CardContent className="space-y-3">
             {recentTransactions.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">
+              <p className="text-center text-muted-foreground py-6">
                 No recent transactions
               </p>
             ) : (
               recentTransactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/40 transition"
                 >
                   <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">
+                    <p className="text-sm font-medium">
                       {transaction.description || "Untitled Transaction"}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {format(new Date(transaction.date), "PP")}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div
+                    <span
                       className={cn(
-                        "flex items-center",
+                        "px-2 py-1 text-xs rounded-full font-medium",
+                        transaction.type === "EXPENSE"
+                          ? "bg-red-100 text-red-600"
+                          : "bg-green-100 text-green-600"
+                      )}
+                    >
+                      {transaction.type}
+                    </span>
+                    <p
+                      className={cn(
+                        "font-semibold",
                         transaction.type === "EXPENSE"
                           ? "text-red-500"
                           : "text-green-500"
                       )}
                     >
-                      {transaction.type === "EXPENSE" ? (
-                        <ArrowDownRight className="mr-1 h-4 w-4" />
-                      ) : (
-                        <ArrowUpRight className="mr-1 h-4 w-4" />
-                      )}
-                      ${transaction.amount.toFixed(2)}
-                    </div>
+                      Rs.{transaction.amount.toFixed(2)}
+                    </p>
                   </div>
                 </div>
               ))
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Expense Breakdown Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-normal">
-            Monthly Expense Breakdown
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 pb-5">
-          {pieChartData.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">
-              No expenses this month
-            </p>
-          ) : (
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieChartData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: $${value.toFixed(2)}`}
-                  >
-                    {pieChartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
+        {/* Expense Breakdown Card */}
+        <Card className="shadow-md rounded-2xl border">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">
+              Monthly Expense Breakdown
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center p-4">
+            {pieChartData.length === 0 ? (
+              <p className="text-center text-muted-foreground py-6">
+                No expenses this month
+              </p>
+            ) : (
+              <>
+                <div className="h-[280px] w-full">
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie
+                        data={pieChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={90}
+                        dataKey="value"
+                        labelLine={false}
+                        label={({ name, percent }) =>
+                          `${name} (${(percent * 100).toFixed(0)}%)`
+                        }
+                      >
+                        {pieChartData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value) => `Rs. ${value.toFixed(2)}`}
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--popover))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "var(--radius)",
+                        }}
                       />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value) => `$${value.toFixed(2)}`}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "var(--radius)",
-                    }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Total Spent:{" "}
+                  <span className="font-semibold text-foreground">
+                    Rs.
+                    {pieChartData
+                      .reduce((sum, item) => sum + item.value, 0)
+                      .toFixed(2)}
+                  </span>
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
+

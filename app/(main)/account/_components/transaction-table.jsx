@@ -55,6 +55,18 @@ import useFetch from "@/hooks/use-fetch";
 import { BarLoader } from "react-spinners";
 import { useRouter } from "next/navigation";
 
+// chart imports
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip as ReTooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+
 const ITEMS_PER_PAGE = 10;
 
 const RECURRING_INTERVALS = {
@@ -80,7 +92,6 @@ export function TransactionTable({ transactions }) {
   const filteredAndSortedTransactions = useMemo(() => {
     let result = [...transactions];
 
-    // Apply search filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       result = result.filter((transaction) =>
@@ -88,12 +99,10 @@ export function TransactionTable({ transactions }) {
       );
     }
 
-    // Apply type filter
     if (typeFilter) {
       result = result.filter((transaction) => transaction.type === typeFilter);
     }
 
-    // Apply recurring filter
     if (recurringFilter) {
       result = result.filter((transaction) => {
         if (recurringFilter === "recurring") return transaction.isRecurring;
@@ -101,10 +110,8 @@ export function TransactionTable({ transactions }) {
       });
     }
 
-    // Apply sorting
     result.sort((a, b) => {
       let comparison = 0;
-
       switch (sortConfig.field) {
         case "date":
           comparison = new Date(a.date) - new Date(b.date);
@@ -118,7 +125,6 @@ export function TransactionTable({ transactions }) {
         default:
           comparison = 0;
       }
-
       return sortConfig.direction === "asc" ? comparison : -comparison;
     });
 
@@ -193,14 +199,57 @@ export function TransactionTable({ transactions }) {
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-    setSelectedIds([]); // Clear selections on page change
+    setSelectedIds([]);
   };
 
+  // ---- Chart Data (Top 5 Expenditures by Category) ----
+  const topExpensesData = useMemo(() => {
+    const expenseMap = {};
+    transactions
+      .filter((t) => t.type === "EXPENSE")
+      .forEach((t) => {
+        expenseMap[t.category] =
+          (expenseMap[t.category] || 0) + Number(t.amount);
+      });
+
+    return Object.entries(expenseMap)
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+  }, [transactions]);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {deleteLoading && (
         <BarLoader className="mt-4" width={"100%"} color="#9333ea" />
       )}
+
+      {/* Chart */}
+      {topExpensesData.length > 0 && (
+        <Card className="bg-blue-100/80 backdrop-blur-md border shadow-md">
+          <CardHeader>
+            <CardTitle>Top 5 Expenditures by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={topExpensesData} layout="vertical">
+                <XAxis type="number" />
+                <YAxis dataKey="category" type="category" width={100} />
+                <ReTooltip />
+                <Bar dataKey="amount" fill="#ef4444">
+                  {topExpensesData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={categoryColors[entry.category] || "#ef4444"}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -248,7 +297,6 @@ export function TransactionTable({ transactions }) {
             </SelectContent>
           </Select>
 
-          {/* Bulk Actions */}
           {selectedIds.length > 0 && (
             <div className="flex items-center gap-2">
               <Button
@@ -282,6 +330,7 @@ export function TransactionTable({ transactions }) {
             <TableRow>
               <TableHead className="w-[50px]">
                 <Checkbox
+                  className="border-white checked:bg-white"
                   checked={
                     selectedIds.length === paginatedTransactions.length &&
                     paginatedTransactions.length > 0
@@ -351,6 +400,7 @@ export function TransactionTable({ transactions }) {
                 <TableRow key={transaction.id}>
                   <TableCell>
                     <Checkbox
+                      className="border-white checked:bg-white"
                       checked={selectedIds.includes(transaction.id)}
                       onCheckedChange={() => handleSelect(transaction.id)}
                     />
@@ -377,7 +427,7 @@ export function TransactionTable({ transactions }) {
                         : "text-green-500"
                     )}
                   >
-                    {transaction.type === "EXPENSE" ? "-" : "+"}$
+                    {transaction.type === "EXPENSE" ? "-" : "+"}Rs.
                     {transaction.amount.toFixed(2)}
                   </TableCell>
                   <TableCell>
@@ -411,13 +461,13 @@ export function TransactionTable({ transactions }) {
                         </Tooltip>
                       </TooltipProvider>
                     ) : (
-                      <Badge variant="outline" className="gap-1">
+                      <Badge variant="outline" className="gap-1 text-white">
                         <Clock className="h-3 w-3" />
                         One-time
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -478,3 +528,5 @@ export function TransactionTable({ transactions }) {
     </div>
   );
 }
+
+

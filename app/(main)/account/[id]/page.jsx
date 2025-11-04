@@ -15,41 +15,50 @@ export default async function AccountPage({ params }) {
   const { transactions, ...account } = accountData;
 
   return (
-    <div className="space-y-8 px-5">
-      <div className="flex gap-4 items-end justify-between">
-        <div>
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight gradient-title capitalize">
-            {account.name}
-          </h1>
-          <p className="text-muted-foreground">
-            {account.type.charAt(0) + account.type.slice(1).toLowerCase()}{" "}
-            Account
-          </p>
-        </div>
+    <section className="relative min-h-screen bg-gradient-to-r from-gray-900 via-black to-gray-800 text-white overflow-hidden px-6 py-10">
+      {/* Subtle Background Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0d_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0d_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
 
-        <div className="text-right pb-2">
-          <div className="text-xl sm:text-2xl font-bold">
-            ${parseFloat(account.balance).toFixed(2)}
+      <div className="relative z-10 container mx-auto space-y-12">
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-end justify-between">
+          <div>
+            <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight capitalize">
+              {account.name}
+            </h1>
+            <p className="text-gray-400 mt-2 text-lg">
+              {account.type.charAt(0) + account.type.slice(1).toLowerCase()} Account
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {account._count.transactions} Transactions
-          </p>
+
+          <div className="text-left lg:text-right">
+            <div className="text-3xl sm:text-4xl font-bold text-indigo-400">
+              Rs.{parseFloat(account.balance).toFixed(2)}
+            </div>
+            <p className="text-sm text-gray-400">
+              {account._count.transactions} Transactions
+            </p>
+          </div>
         </div>
+
+        {/* Chart Section */}
+        <Suspense
+          fallback={<BarLoader className="mt-4" width={"100%"} color="#9333ea" />}
+        >
+          <div className="bg-gray-900/40 backdrop-blur-md border border-gray-700 rounded-2xl p-6 shadow-lg">
+            <AccountChart transactions={transactions} />
+          </div>
+        </Suspense>
+
+        {/* Transactions Table */}
+        <Suspense
+          fallback={<BarLoader className="mt-4" width={"100%"} color="#9333ea" />}
+        >
+          <div className="bg-gray-900/40 backdrop-blur-md border border-gray-700 rounded-2xl p-6 shadow-lg">
+            <TransactionTable transactions={transactions} />
+          </div>
+        </Suspense>
       </div>
-
-      {/* Chart Section */}
-      <Suspense
-        fallback={<BarLoader className="mt-4" width={"100%"} color="#9333ea" />}
-      >
-        <AccountChart transactions={transactions} />
-      </Suspense>
-
-      {/* Transactions Table */}
-      <Suspense
-        fallback={<BarLoader className="mt-4" width={"100%"} color="#9333ea" />}
-      >
-        <TransactionTable transactions={transactions} />
-      </Suspense>
-    </div>
+    </section>
   );
 }

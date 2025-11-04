@@ -82,6 +82,9 @@ html {
   .gradient-title {
     @apply gradient font-extrabold tracking-tighter pr-2 pb-2 text-transparent bg-clip-text;
   }
+  .drop-shadow-glow {
+    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+  }
 }
 
 .hero-image-wrapper {
@@ -116,3 +119,4 @@ html {
   background-size: 200% 200%;
   animation: gradientMove 3s ease infinite;
 }
+

@@ -1,8 +1,7 @@
 "use client";
 
-import { ArrowUpRight, ArrowDownRight, CreditCard } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { useEffect } from "react";
 import useFetch from "@/hooks/use-fetch";
 import {
@@ -27,11 +26,11 @@ export function AccountCard({ account }) {
   } = useFetch(updateDefaultAccount);
 
   const handleDefaultChange = async (event) => {
-    event.preventDefault(); // Prevent navigation
+    event.preventDefault();
 
     if (isDefault) {
-      toast.warning("You need atleast 1 default account");
-      return; // Don't allow toggling off the default account
+      toast.warning("You need at least 1 default account");
+      return;
     }
 
     await updateDefaultFn(id);
@@ -50,10 +49,17 @@ export function AccountCard({ account }) {
   }, [error]);
 
   return (
-    <Card className="hover:shadow-md transition-shadow group relative">
-      <Link href={`/account/${id}`}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium capitalize">
+    <Card
+      className="group relative rounded-xl border border-gray-700/40 bg-gray-800/40 
+                 hover:bg-gray-800/70 shadow-lg hover:shadow-indigo-500/20 
+                 transition-all duration-300 cursor-pointer overflow-hidden"
+    >
+      {/* Gradient Glow */}
+      <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500"></div>
+
+      <Link href={`/account/${id}`} className="relative z-10 block">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg font-semibold text-white capitalize">
             {name}
           </CardTitle>
           <Switch
@@ -62,21 +68,23 @@ export function AccountCard({ account }) {
             disabled={updateDefaultLoading}
           />
         </CardHeader>
+
         <CardContent>
-          <div className="text-2xl font-bold">
-            ${parseFloat(balance).toFixed(2)}
+          <div className="text-3xl font-extrabold text-indigo-400">
+            Rs.{parseFloat(balance).toFixed(2)}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-gray-400">
             {type.charAt(0) + type.slice(1).toLowerCase()} Account
           </p>
         </CardContent>
-        <CardFooter className="flex justify-between text-sm text-muted-foreground">
-          <div className="flex items-center">
-            <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
+
+        <CardFooter className="flex justify-between text-xs text-gray-400 border-t border-gray-700/50 pt-3">
+          <div className="flex items-center gap-1">
+            <ArrowUpRight className="h-4 w-4 text-green-400" />
             Income
           </div>
-          <div className="flex items-center">
-            <ArrowDownRight className="mr-1 h-4 w-4 text-red-500" />
+          <div className="flex items-center gap-1">
+            <ArrowDownRight className="h-4 w-4 text-red-400" />
             Expense
           </div>
         </CardFooter>
@@ -84,3 +92,4 @@ export function AccountCard({ account }) {
     </Card>
   );
 }
+
